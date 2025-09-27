@@ -1,0 +1,8 @@
+{
+  "name": "Java 17",
+  "build": { "dockerfile": "Dockerfile" },
+  "postCreateCommand": "mvn -v && java -version",
+  "customizations": {
+    "vscode": { "extensions": ["vscjava.vscode-java-pack"] }
+  }
+}
