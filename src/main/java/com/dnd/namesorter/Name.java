@@ -3,26 +3,26 @@ package com.dnd.namesorter;
 import java.util.List;
 import java.util.StringJoiner;
 
-final class Name {
-  private final List<String> givenNames;
-  private final String lastName;
+public record Name(List<String> givenNames, String lastName, String suffix) {
 
-  Name(List<String> givenNames, String lastName) {
+  public Name {
     if (givenNames == null || givenNames.isEmpty())
       throw new IllegalArgumentException("At least one given name required.");
     if (lastName == null || lastName.isBlank())
       throw new IllegalArgumentException("Last name required.");
-    this.givenNames = List.copyOf(givenNames);
-    this.lastName = lastName;
+    givenNames = List.copyOf(givenNames);
+    suffix = (suffix != null && !suffix.isBlank()) ? suffix : null;
   }
 
-  List<String> givenNames() { return givenNames; }
-  String lastName() { return lastName; }
+  public Name(List<String> givenNames, String lastName) {
+    this(givenNames, lastName, null);
+  }
 
-  String fullName() {
-    StringJoiner sj = new StringJoiner(" ");
+  public String fullName() {
+    var sj = new StringJoiner(" ");
     givenNames.forEach(sj::add);
     sj.add(lastName);
+    if (suffix != null) sj.add(suffix);
     return sj.toString();
   }
 }

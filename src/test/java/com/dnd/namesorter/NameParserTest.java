@@ -7,19 +7,19 @@ final class NameParserTest {
   private final NameParser parser = new NameParser();
 
   @Test void parsesTwoPart() {
-    Name n = parser.parseLine("Marin Alvarez", 1);
+    var n = parser.parseLine("Marin Alvarez", 1);
     assertEquals("Alvarez", n.lastName());
     assertEquals("Marin", n.givenNames().get(0));
   }
 
   @Test void parsesMultiGiven() {
-    Name n = parser.parseLine("Hunter Uriah Mathew Clarke", 2);
+    var n = parser.parseLine("Hunter Uriah Mathew Clarke", 2);
     assertEquals("Clarke", n.lastName());
     assertEquals(3, n.givenNames().size());
   }
 
   @Test void collapsesWhitespace() {
-    Name n = parser.parseLine("  Beau   Tristan   Bentley  ", 3);
+    var n = parser.parseLine("  Beau   Tristan   Bentley  ", 3);
     assertEquals("Bentley", n.lastName());
   }
 

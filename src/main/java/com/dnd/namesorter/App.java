@@ -8,48 +8,72 @@ import java.util.List;
 
 public final class App {
   public static void main(String[] args) {
-    if (args.length != 1) {
-      System.err.println("Usage: name-sorter <path-to-unsorted-names-list.txt>");
-      System.exit(1);
+    System.exit(run(args));
+  }
+
+  static int run(String[] args) {
+    if (args.length < 1 || args.length > 2) {
+      System.err.println("Usage: name-sorter <input> [--out=PATH]");
+      return 1;
     }
 
     Path input = Path.of(args[0]);
     Path output = Path.of("sorted-names-list.txt");
 
-    List<String> rawLines;
+    if (args.length == 2) {
+      if (args[1].startsWith("--out=")) {
+        output = Path.of(args[1].substring("--out=".length()));
+      } else {
+        System.err.println("Usage: name-sorter <input> [--out=PATH]");
+        return 1;
+      }
+    }
+
+    final List<String> rawLines;
     try {
       rawLines = Files.readAllLines(input, StandardCharsets.UTF_8);
     } catch (IOException e) {
       System.err.println("[error] Unable to read input file: " + e.getMessage());
-      System.exit(2);
-      return;
+      return 2;
     }
 
     var parser = new NameParser();
     var names = new ArrayList<Name>();
-    int lineNo = 0;
+    int lineNo = 0, invalid = 0;
     for (String line : rawLines) {
       lineNo++;
       try {
         names.add(parser.parseLine(line, lineNo));
       } catch (IllegalArgumentException ex) {
-        System.err.println("[warn] Skipping line " + lineNo + ": " + ex.getMessage());
+        invalid++;
       }
+    }
+    if (invalid > 0) System.err.println("[warn] Skipped " + invalid + " invalid line(s).");
+
+    if (names.isEmpty()) {
+      System.err.println("[error] No valid names found. Writing message to output file.");
+      try {
+        Files.writeString(output, "No valid names found\n", StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+      } catch (IOException e) {
+        System.err.println("[error] Could not write output file: " + e.getMessage());
+        return 3;
+      }
+      return 4;
     }
 
     names.sort(NameComparator.BY_LAST_THEN_GIVEN);
     List<String> sorted = names.stream().map(Name::fullName).toList();
 
-    // print to screen
     sorted.forEach(System.out::println);
 
-    // write file (overwrite)
     try {
       Files.write(output, sorted, StandardCharsets.UTF_8,
           StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       System.err.println("[error] Failed to write " + output.toAbsolutePath() + ": " + e.getMessage());
-      System.exit(3);
+      return 3;
     }
+    return 0;
   }
 }
